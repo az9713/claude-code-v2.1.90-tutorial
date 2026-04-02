@@ -1,9 +1,0 @@
-Extract ALL key takeaways from the video. Be exhaustive — do not skip any points, sub-points, examples, or nuances mentioned by the speaker. For each takeaway:
-1. State the takeaway clearly.
-2. Provide ALL supporting details, examples, analogies, or evidence the speaker used. Include specific names, numbers, and technical terms mentioned.
-3. Note the approximate timestamp.
-
-After listing all takeaways, provide:
-- A comprehensive summary (at least 500 words) covering all major points discussed, the speaker's arguments and reasoning, specific examples or demos shown, and how the topics connect to each other.
-- Who is the intended audience.
-- What actionable steps a viewer should take after watching.
