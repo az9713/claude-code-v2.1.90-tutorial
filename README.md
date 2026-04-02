@@ -66,7 +66,7 @@ The tutorial was saved to:
 ```
 docs/2026-04-01-claude-code-v2190-deep-dive.md
 ```
-...inside the active project (`gemini3.1_flash_live_nate_herk`), then copied here.
+...then copied here.
 
 ## Reproducing This Process
 
