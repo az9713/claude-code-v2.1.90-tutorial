@@ -8,7 +8,7 @@ This directory contains a deep dive tutorial for all new features in Claude Code
 
 | File | Description |
 |---|---|
-| `2026-04-01-claude-code-v2190-deep-dive.md` | The full tutorial (746 lines) |
+| `claude-code-v2.19.0-deep-dive.md` | The full tutorial (746 lines) |
 | `README.md` | This file |
 
 ## How the Tutorial Was Created
@@ -64,7 +64,7 @@ The tutorial was written in a single `Write` tool call (746 lines). Each section
 
 The tutorial was saved to:
 ```
-docs/2026-04-01-claude-code-v2190-deep-dive.md
+docs/claude-code-v2.19.0-deep-dive.md
 ```
 ...then copied here.
 
