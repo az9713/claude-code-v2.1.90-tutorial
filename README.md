@@ -9,7 +9,6 @@ This directory contains a deep dive tutorial for all new features in Claude Code
 | File | Description |
 |---|---|
 | `2026-04-01-claude-code-v2190-deep-dive.md` | The full tutorial (746 lines) |
-| `cc1_release.txt` | Raw session transcript showing the exact conversation that produced the tutorial |
 | `README.md` | This file |
 
 ## How the Tutorial Was Created
