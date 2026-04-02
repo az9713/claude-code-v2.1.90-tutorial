@@ -1,0 +1,118 @@
+0:00 [Host] Welcome to the AI Engineering podcast I'm your host
+0:03 Sarah Chen and today I'm joined by Marcus Rivera who is
+0:06 the CTO of DataFlow Labs Marcus thanks for being here
+0:09 [Guest] Thanks Sarah great to be here I've been a fan of the
+0:12 show for a while so this is exciting
+0:15 [Host] So Marcus you've been building data infrastructure
+0:18 for what fifteen years now and you recently made this
+0:21 controversial claim that most companies are over engineering
+0:24 their data pipelines can you tell us what you mean by that
+0:27 [Guest] Yeah absolutely so um look I've seen this pattern
+0:30 over and over again a company starts with a simple ETL
+0:33 pipeline maybe they're using airflow or something and it
+0:36 works fine but then someone reads a blog post about
+0:39 how Netflix does real time streaming with kafka and
+0:42 suddenly everyone wants to rebuild everything to be
+0:45 real time and event driven
+0:48 [Host] Right the Netflix effect
+0:50 [Guest] Exactly the Netflix effect and the thing is Netflix
+0:53 has like 200 million subscribers generating massive amounts
+0:56 of data in real time they actually need that infrastructure
+0:59 but if you're a B2B SaaS company with ten thousand customers
+1:02 you probably dont you're adding enormous complexity
+1:05 for no real benefit
+1:08 [Host] So what should those companies be doing instead
+1:11 [Guest] So my advice is always start with batch processing
+1:14 and I know that sounds boring but batch is incredibly
+1:17 powerful and well understood you run your pipelines once
+1:20 a day or once an hour and for 90 percent of use cases
+1:23 thats perfectly fine your dashboards update hourly instead
+1:26 of in real time and nobody actually notices
+1:29 [Host] But what about the cases where you do need real time
+1:32 like fraud detection or recommendation engines
+1:35 [Guest] Great question so there are legitimate real time
+1:38 use cases absolutely fraud detection is one recommendations
+1:41 can be another um monitoring and alerting for sure but
+1:44 even in those cases you dont need to make everything
+1:47 real time you can have a hybrid approach where most of
+1:50 your pipeline is batch but you have a thin real time
+1:53 layer for the things that actually need it
+1:56 [Host] You've talked about what you call the complexity tax
+1:59 can you explain that concept
+2:02 [Guest] Yeah so the complexity tax is basically all the
+2:05 hidden costs of running complex infrastructure that
+2:08 people dont account for when they make architecture
+2:11 decisions so like okay you decide to use kafka right
+2:14 now you need someone who knows kafka you need to
+2:17 manage partitions and consumer groups and handle
+2:20 rebalancing and deal with schema evolution and monitor
+2:23 lag and all of this stuff and if something goes wrong
+2:26 at 3am someone has to understand all of it to fix it
+2:29 [Host] And you're saying that cost often exceeds the benefit
+2:32 [Guest] For most companies absolutely I mean I've consulted
+2:35 with companies that have five person data teams spending
+2:38 80 percent of their time just keeping kafka and flink
+2:41 running and they're like we cant do any actual data
+2:44 science because all our time goes to infrastructure
+2:47 and thats the complexity tax right there
+2:50 [Host] Thats a really compelling argument so lets talk
+2:53 about AI specifically because thats where a lot of the
+2:56 excitement is right now how does this philosophy apply
+2:59 to building AI applications
+3:02 [Guest] So this is where it gets really interesting because
+3:05 AI has introduced this whole new category of data pipeline
+3:08 complexity you've got embedding pipelines vector databases
+3:11 RAG systems fine tuning pipelines evaluation frameworks
+3:14 and the temptation is to build this elaborate system
+3:17 with all of these components from day one
+3:20 [Host] The AI version of over engineering
+3:22 [Guest] Exactly and my advice is the same start simple
+3:25 you dont need a vector database on day one just use
+3:28 a simple prompt with your context stuffed in there
+3:31 you dont need fine tuning start with few shot prompting
+3:34 you dont need a complex evaluation framework start with
+3:37 vibes based evaluation and then add complexity only when
+3:40 you hit a specific limitation
+3:43 [Host] Vibes based evaluation I love that term did you coin it
+3:46 [Guest] Ha no I think I heard it from Hamel Husain actually
+3:49 but the idea is you just use the thing and see if it
+3:52 feels right and honestly for early stage products thats
+3:55 the right approach because you dont even know what good
+3:58 looks like yet so building elaborate benchmarks is
+4:01 premature optimization
+4:04 [Host] What about when you do need to scale though because
+4:07 presumably at some point you outgrow the simple approach
+4:10 [Guest] Of course and thats fine the key is that you'll
+4:13 know when you need to scale because you'll hit a specific
+4:16 problem like your context window is too small for all
+4:19 your documents so now you actually need RAG or your
+4:22 latency is too high so you need to cache embeddings
+4:25 or your prompt engineering is hitting a ceiling so
+4:28 maybe now fine tuning makes sense each of those is a
+4:31 clear signal and you add exactly the component you need
+4:34 nothing more
+4:37 [Host] This is really refreshing honestly because theres
+4:40 so much pressure in the industry to use every new tool
+4:43 [Guest] Yeah the tooling ecosystem is exploding and every
+4:46 vendor is telling you that you need their product and
+4:49 look I'm a CTO at a data infrastructure company I'm
+4:52 literally a vendor myself but I genuinely believe that
+4:55 simpler is better and the companies that win are the
+4:58 ones that ship products not the ones with the most
+5:01 sophisticated infrastructure
+5:04 [Host] Last question if someone is starting a new AI project
+5:07 tomorrow what would your stack recommendation be
+5:10 [Guest] Honestly just use postgres with pgvector for your
+5:13 database openai or anthropic for your LLM calls a simple
+5:16 python script for your pipeline and deploy it on a single
+5:19 server and I know that sounds almost irresponsibly simple
+5:22 but you would be amazed at how far that gets you and when
+5:25 you need more complexity you'll know and you can add it
+5:28 then
+5:30 [Host] Marcus this has been fantastic where can people
+5:33 find you
+5:35 [Guest] You can find me on twitter at marcus_rivera or
+5:38 check out our blog at dataflowlabs.io/blog we write a
+5:41 lot about this stuff
+5:43 [Host] Thanks so much for joining us everyone check the
+5:46 show notes for links and we'll see you next week

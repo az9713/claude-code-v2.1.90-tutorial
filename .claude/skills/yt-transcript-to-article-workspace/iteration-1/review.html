@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "yt-transcript-to-article", "runs": [{"id": "solo-tech-talk-with-skill", "prompt": "hey can you turn this transcript into a readable article? it's from a youtube video about vector databases. the file is at ~/.claude/skills/yt-transcript-to-article-workspace/test-data/solo-tech-talk.txt", "eval_id": 0, "outputs": [{"name": "vector-databases-for-ai-applications.md", "type": "text", "content": "# Vector Databases: What They Are, How They Differ, and Which One to Choose for AI Applications\n\n> **TL;DR:** Vector databases store high-dimensional embeddings that enable semantic search \u00e2\u20ac\u201d finding items by meaning rather than exact keywords. The major options include Pinecone (managed, fast, proprietary), Weaviate (open source, flexible), ChromaDB (easy prototyping), and pgvector (adds vector search to existing Postgres). Choosing the right embedding model matters more than choosing the right database, and the indexing algorithm under the hood (typically HNSW) is an underappreciated factor in performance.\n\n**Source:** Solo tech talk on vector databases (YouTube)\n**Speaker:** Unidentified solo presenter (tech/AI channel)\n\n---\n\n## Why Traditional Databases Fall Short for AI\n\nTraditional databases like Postgres and MySQL store data in rows and columns \u00e2\u20ac\u201d a model that works well for structured data but breaks down when applied to AI and machine learning workloads. AI applications need to store *embeddings*: high-dimensional vectors that represent the semantic meaning of text, images, or other content.\n\nThe key insight behind vector databases is that **similar things produce similar vectors**. Two sentences with roughly the same meaning will have vectors that sit close together in high-dimensional space. That geometric closeness is what makes semantic search possible \u00e2\u20ac\u201d retrieving results based on meaning rather than exact keyword matches.\n\n## The Major Vector Database Options\n\n### Pinecone: Fully Managed, Zero Infrastructure\n\nPinecone is probably the most well-known vector database. As a fully managed service, it eliminates infrastructure concerns entirely \u00e2\u20ac\u201d users send vectors and query them, and the service handles everything else. It is fast and straightforward to use. The downsides are that it is proprietary and can become expensive at scale.\n\n### Weaviate: Open Source and Modular\n\nWeaviate takes an open-source approach, offering both self-hosted and cloud-hosted deployment options. Its standout feature is a module system that allows plugging in different vectorizers \u00e2\u20ac\u201d OpenAI embeddings, Hugging Face models, or other options. Weaviate also supports **hybrid search**, which combines vector-based semantic search with traditional keyword search. This is particularly powerful for cases where exact matches are needed alongside semantic similarity.\n\n### ChromaDB: The Prototyping Favorite\n\nChromaDB is the easiest option to get started with. It is designed for local development and prototyping \u00e2\u20ac\u201d a simple `pip install` gets it running in about five minutes, making it ideal for building demos and proof-of-concept applications. However, for production workloads, a more robust solution is likely needed.\n\n### pgvector: Vector Search Inside Postgres\n\nFor companies that already run Postgres, pgvector offers an appealing path: rather than adding another database to the stack, the pgvector extension adds vector search capabilities directly to an existing Postgres instance. The performance does not match dedicated vector databases at very large scale, but for most applications it works well \u00e2\u20ac\u201d with the significant benefit of keeping everything in a single database.\n\n## Choosing the Right Database\n\nThe right choice depends on the specific use case:\n\n- **Prototyping and demos:** ChromaDB, for its ease of setup and minimal overhead.\n- **Managed solution with budget flexibility:** Pinecone, for its speed and zero-ops approach.\n- **Open source and flexibility:** Weaviate, for its module system and hybrid search capabilities.\n- **Existing Postgres at moderate scale:** pgvector, for the simplicity of a single-database architecture.\n\n## The Underappreciated Role of Indexing Algorithms\n\nMost vector databases rely on an algorithm called **HNSW (Hierarchical Navigable Small World graphs)**. The basic idea is to build a graph structure where each vector connects to its nearest neighbors. When a search query arrives, the system navigates through this graph to find the closest matches. The search is approximate rather than exact, but it runs in O(log n) time and typically achieves accuracy above 95% \u00e2\u20ac\u201d sufficient for most applications.\n\nOther indexing approaches include **IVF (Inverted File Index)** and **Product Quantization (PQ)**, which compresses vectors to reduce memory usage. These are more commonly found in libraries like FAISS (Facebook's vector search library). The fundamental tradeoff across all these methods is between speed, accuracy, and memory usage, and the parameters need to be tuned for each specific use case.\n\n## Embedding Models Matter More Than the Database\n\nOne point that deserves more attention: **the embedding model matters far more than the choice of vector database**. People tend to obsess over which database to use, but the quality of the embeddings is what ultimately determines whether search results are good.\n\nIt is worth investing time in evaluating different embedding models \u00e2\u20ac\u201d OpenAI's Ada model, newer models from Cohere, or open-source options from Sentence Transformers \u00e2\u20ac\u201d and testing them against real data rather than defaulting to whatever is currently popular.\n\n## Key Takeaways\n\n- Vector databases store high-dimensional embeddings that enable semantic search \u00e2\u20ac\u201d finding content by meaning, not just keywords.\n- Similar items produce vectors that are close together in high-dimensional space, which is the foundational principle behind the technology.\n- Pinecone, Weaviate, ChromaDB, and pgvector each serve different needs and scale profiles \u00e2\u20ac\u201d match the tool to the use case.\n- Hybrid search (combining vector and keyword search), as offered by Weaviate, addresses cases where exact matches matter alongside semantic similarity.\n- pgvector is a pragmatic choice for teams already running Postgres at moderate scale, avoiding the complexity of an additional database.\n- HNSW is the dominant indexing algorithm, offering approximate nearest-neighbor search with high accuracy and logarithmic time complexity.\n- The embedding model has a greater impact on search quality than the database itself \u00e2\u20ac\u201d evaluate models on real data before committing.\n- Avoid choosing tools based on hype; match the database and embedding model to actual application requirements.\n\n---\n\n*Sources: Solo tech talk on vector databases (YouTube channel unidentified)*\n"}], "grading": {"eval_id": 0, "eval_name": "solo-tech-talk", "configuration": "with_skill", "expectations": [{"text": "has_descriptive_title", "passed": true, "evidence": "Title is 'Vector Databases: What They Are, How They Differ, and Which One to Choose for AI Applications' - descriptive and engaging"}, {"text": "has_tldr", "passed": true, "evidence": "TL;DR section present at line 3 with substantive 3-sentence summary"}, {"text": "has_thematic_sections", "passed": true, "evidence": "Sections organized by theme: 'Why Traditional Databases Fall Short', 'The Major Vector Database Options', 'Choosing the Right Database', 'Indexing Algorithms', 'Embedding Models Matter More' - not chronological"}, {"text": "has_key_takeaways", "passed": true, "evidence": "Key Takeaways section present with 8 bullet points"}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found in output"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found in output"}, {"text": "mentions_all_databases", "passed": true, "evidence": "Pinecone, Weaviate, ChromaDB, pgvector all have dedicated subsections"}, {"text": "mentions_hnsw", "passed": true, "evidence": "HNSW explained in 'Underappreciated Role of Indexing Algorithms' section"}, {"text": "mentions_embedding_importance", "passed": true, "evidence": "Dedicated section 'Embedding Models Matter More Than the Database' with bold emphasis"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with H1, H2, H3 headers, bold text, bullet lists"}]}}, {"id": "solo-tech-talk-without-skill", "prompt": "hey can you turn this transcript into a readable article? it's from a youtube video about vector databases. the file is at ~/.claude/skills/yt-transcript-to-article-workspace/test-data/solo-tech-talk.txt", "eval_id": 0, "outputs": [{"name": "solo-tech-talk.md", "type": "text", "content": "# Vector Databases: Why They Matter for AI Applications\n\nTraditional databases like PostgreSQL and MySQL store data in rows and columns, which works well for structured data. But when you're working with AI and machine learning, you need something different. You need to store **embeddings** -- high-dimensional vectors that represent the meaning of text, images, or other data.\n\nThe key insight behind vector databases is simple: **similar things have similar vectors**. If two sentences mean roughly the same thing, their vectors will be close together in high-dimensional space. This is what makes semantic search possible.\n\n## The Major Vector Database Options\n\nThere are several vector databases available today, each with distinct strengths.\n\n### Pinecone\n\nPinecone is probably the most well-known option. It's a fully managed service, so you don't have to worry about infrastructure at all -- you just send your vectors and query them. It's fast and easy to use. The downside is that it's proprietary and can get expensive at scale.\n\n### Weaviate\n\nWeaviate is open source, which gives you the option to self-host it or use their cloud service. One of its standout features is its module system, which lets you plug in different vectorizers -- whether that's OpenAI embeddings, Hugging Face models, or something else. Weaviate also supports **hybrid search**, combining vector search with traditional keyword search. This is particularly powerful because sometimes you need exact matches rather than just semantic similarity.\n\n### ChromaDB\n\nChromaDB is the easiest to get started with. It's designed for local development and prototyping -- you can install it with `pip` and start using it in about five minutes. It's great for building demos, but for production workloads, you'll probably want something more robust.\n\n### pgvector\n\npgvector takes a different approach. Since many companies already run PostgreSQL, instead of adding another database to your stack, you can simply add the pgvector extension and gain vector search capabilities within your existing database. The performance isn't as strong as dedicated vector databases at very large scale, but for most applications it works well -- and you get the benefit of keeping everything in one database.\n\n## How to Choose\n\nThe right choice depends on your situation:\n\n- **Prototyping:** ChromaDB is the fastest way to get started.\n- **Managed solution (budget permitting):** Pinecone offers a smooth, hands-off experience.\n- **Open source and flexibility:** Weaviate gives you the most control.\n- **Already running PostgreSQL at moderate scale:** pgvector is the pragmatic choice.\n\n## Under the Hood: Indexing Algorithms\n\nMost vector databases use an algorithm called **HNSW** (Hierarchical Navigable Small World graphs). The basic idea is to build a graph structure where each vector is connected to its nearest neighbors. When you search, the database navigates through this graph to find the closest matches. It's not exact -- it's approximate -- but it's fast (O(log n)) and typically achieves accuracy above 95%, which is sufficient for most applications.\n\nOther approaches include **IVF** (Inverted File Index) and **Product Quantization (PQ)**, which compresses vectors to reduce memory usage. These are more common in libraries like FAISS (Facebook's vector search library). The tradeoff is always between speed, accuracy, and memory usage, and you'll need to tune parameters for your specific use case.\n\n## The Most Important Factor: Your Embedding Model\n\nOne often-underappreciated point is that the embedding model you choose matters far more than which database you pick. People tend to obsess over database selection, but it's the quality of your embeddings that ultimately determines whether your search results are good.\n\nSpend time evaluating different embedding models -- such as OpenAI's Ada model, newer models from Cohere, or open-source options from Sentence Transformers -- and test them against your actual data. Don't just default to whatever is popular.\n\n## Conclusion\n\nVector databases are essential infrastructure for AI applications, and there are solid options at every price point and level of complexity. The most important thing is to match your choice to your actual needs rather than following hype. And above all, remember: the embedding model matters more than the database.\n"}], "grading": {"eval_id": 0, "eval_name": "solo-tech-talk", "configuration": "without_skill", "expectations": [{"text": "has_descriptive_title", "passed": true, "evidence": "Title is 'Vector Databases: Why They Matter for AI Applications' - descriptive but less engaging than with-skill version"}, {"text": "has_tldr", "passed": false, "evidence": "No TL;DR section present anywhere in the article"}, {"text": "has_thematic_sections", "passed": true, "evidence": "Sections organized by theme: 'The Major Vector Database Options', 'How to Choose', 'Indexing Algorithms', 'Most Important Factor'"}, {"text": "has_key_takeaways", "passed": false, "evidence": "No Key Takeaways section. Has a 'Conclusion' paragraph instead"}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found in output"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found in output"}, {"text": "mentions_all_databases", "passed": true, "evidence": "Pinecone, Weaviate, ChromaDB, pgvector all mentioned with subsections"}, {"text": "mentions_hnsw", "passed": true, "evidence": "HNSW explained in 'Under the Hood' section"}, {"text": "mentions_embedding_importance", "passed": true, "evidence": "Dedicated section 'The Most Important Factor: Your Embedding Model'"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with H1, H2, H3 headers"}]}}, {"id": "interview-podcast-with-skill", "prompt": "I've got this podcast transcript where Sarah Chen interviews Marcus Rivera about over-engineering data pipelines. Can you make it into a proper article? File: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/interview-podcast.txt", "eval_id": 1, "outputs": [{"name": "stop-over-engineering-your-data-pipelines.md", "type": "text", "content": "# Stop Over-Engineering Your Data Pipelines: A Case for Radical Simplicity\n\n> **TL;DR:** Most companies are wasting engineering resources by copying the data infrastructure of tech giants like Netflix, when simple batch processing would serve them just as well. Marcus Rivera, CTO of DataFlow Labs, argues that the \"complexity tax\" \u00e2\u20ac\u201d the hidden cost of maintaining sophisticated systems \u00e2\u20ac\u201d is crippling small data teams, and that this pattern is now repeating itself in the AI tooling space. His prescription: start embarrassingly simple and add complexity only when you hit a specific, measurable limitation.\n\n**Source:** AI Engineering Podcast\n**Speakers:** Sarah Chen (Host, AI Engineering Podcast) and Marcus Rivera (CTO, DataFlow Labs)\n\n---\n\n## The Netflix Effect: Why Companies Copy Infrastructure They Don't Need\n\nAfter fifteen years building data infrastructure, Marcus Rivera has seen the same pattern play out over and over: a company starts with a simple ETL pipeline \u00e2\u20ac\u201d maybe Airflow-based \u00e2\u20ac\u201d and it works fine. Then someone reads a blog post about how Netflix handles real-time streaming with Kafka, and suddenly the whole team wants to rebuild everything to be real-time and event-driven.\n\nRivera calls this \"the Netflix effect,\" and he considers it one of the most damaging patterns in modern data engineering. The core issue is a mismatch of scale: Netflix has roughly 200 million subscribers generating massive amounts of data in real time \u00e2\u20ac\u201d they genuinely need that infrastructure. A B2B SaaS company with ten thousand customers almost certainly does not.\n\nAs Rivera puts it, \"You're adding enormous complexity for no real benefit.\"\n\n## The Complexity Tax\n\nRivera has coined a concept he calls the \"complexity tax\" \u00e2\u20ac\u201d the hidden costs of running sophisticated infrastructure that teams fail to account for when making architecture decisions. Take Kafka as an example: once you adopt it, you need engineers who understand Kafka, you need to manage partitions and consumer groups, handle rebalancing, deal with schema evolution, and monitor lag. When something breaks at 3 AM, someone has to understand all of these interlocking systems to fix it.\n\nThe real-world cost of this tax is staggering. Rivera has consulted with companies where five-person data teams spend 80 percent of their time just keeping Kafka and Flink running. As he describes it, \"They're like, 'We can't do any actual data science because all our time goes to infrastructure.'\" That, he argues, is the complexity tax made visible \u00e2\u20ac\u201d engineering capacity consumed entirely by maintenance rather than value creation.\n\n## Batch Processing: Boring, Powerful, and Underrated\n\nRivera's recommendation is straightforward and deliberately unglamorous: start with batch processing. Run pipelines once a day or once an hour. For 90 percent of use cases, that cadence is perfectly adequate \u00e2\u20ac\u201d dashboards update hourly instead of in real time, and nobody actually notices the difference.\n\nThis is not to say real-time processing has no place. Rivera identifies several legitimate real-time use cases: fraud detection, recommendation engines, and monitoring and alerting systems. But even in those scenarios, he advocates for a hybrid approach \u00e2\u20ac\u201d keep most of the pipeline batch-based and layer in a thin real-time component only for the specific operations that genuinely require it. The key is surgical precision rather than wholesale adoption.\n\n## The Same Mistake, Repeated for AI\n\nThe over-engineering pattern is now repeating itself in the AI application space, with a whole new category of pipeline complexity: embedding pipelines, vector databases, RAG systems, fine-tuning pipelines, and evaluation frameworks. The temptation, Rivera observes, is to build an elaborate system incorporating all of these components from day one.\n\nHis advice for AI projects mirrors his advice for data pipelines: start simple. Specifically:\n\n- **Skip the vector database on day one.** Just stuff your context directly into the prompt.\n- **Skip fine-tuning.** Start with few-shot prompting.\n- **Skip complex evaluation frameworks.** Start with what Rivera calls \"vibes-based evaluation\" \u00e2\u20ac\u201d a term he credits to Hamel Husain \u00e2\u20ac\u201d where you simply use the product and assess whether it feels right.\n\nThat last point is particularly counterintuitive, but Rivera argues it makes sense for early-stage products. \"You don't even know what good looks like yet,\" he explains, \"so building elaborate benchmarks is premature optimization.\"\n\n## Knowing When to Scale\n\nThe natural follow-up question is: when do you add complexity? Rivera's answer is that the system itself will tell you through specific, identifiable signals:\n\n- **Your context window is too small** for all your documents \u00e2\u20ac\u201d now you actually need RAG.\n- **Your latency is too high** \u00e2\u20ac\u201d now you need to cache embeddings.\n- **Your prompt engineering is hitting a ceiling** \u00e2\u20ac\u201d now fine-tuning might make sense.\n\nEach of these is a clear, concrete signal, and the response should be equally targeted: add exactly the component you need, nothing more. This stands in contrast to the common approach of pre-building for every conceivable future requirement.\n\n## The Vendor Paradox\n\nRivera acknowledges an irony in his position: as the CTO of a data infrastructure company, he is literally a vendor himself. Yet he genuinely believes simpler is better. The tooling ecosystem is exploding, and every vendor is telling companies they need their product. Rivera pushes back against this pressure directly: \"The companies that win are the ones that ship products, not the ones with the most sophisticated infrastructure.\"\n\n## The Radically Simple AI Stack\n\nWhen asked for a concrete stack recommendation for someone starting a new AI project, Rivera's answer is almost provocatively minimal:\n\n- **Database:** Postgres with pgvector\n- **LLM:** OpenAI or Anthropic API calls\n- **Pipeline:** A simple Python script\n- **Deployment:** A single server\n\nAs Rivera acknowledges, \"I know that sounds almost irresponsibly simple, but you would be amazed at how far that gets you.\" The philosophy is consistent throughout: when you need more complexity, you will know, and you can add it then.\n\n## Key Takeaways\n\n- **The \"Netflix effect\" is real and damaging** \u00e2\u20ac\u201d most companies copy infrastructure designed for problems they don't have.\n- **The complexity tax is invisible but enormous** \u00e2\u20ac\u201d account for the full cost of maintenance, hiring, and on-call burden before adopting complex tools.\n- **Batch processing handles 90% of use cases** \u00e2\u20ac\u201d hourly updates are sufficient for most business needs.\n- **Use a hybrid approach for real-time needs** \u00e2\u20ac\u201d keep most of the pipeline batch-based and add a thin real-time layer only where truly necessary.\n- **AI tooling is repeating the same over-engineering pattern** \u00e2\u20ac\u201d resist the urge to build elaborate AI infrastructure before you need it.\n- **Start with vibes-based evaluation** \u00e2\u20ac\u201d you can't build meaningful benchmarks until you understand what \"good\" looks like for your product.\n- **Let specific bottlenecks drive architecture decisions** \u00e2\u20ac\u201d add components like RAG, embedding caches, or fine-tuning only when you hit a measurable limitation.\n- **A radically simple stack can take you further than you think** \u00e2\u20ac\u201d Postgres, an LLM API, a Python script, and one server is a legitimate starting point.\n- **Shipping products beats sophisticated infrastructure** \u00e2\u20ac\u201d engineering time spent on infrastructure maintenance is time not spent creating value.\n\n---\n\n*Sources: AI Engineering Podcast \u00e2\u20ac\u201d Sarah Chen interviews Marcus Rivera (CTO, DataFlow Labs)*\n"}], "grading": {"eval_id": 1, "eval_name": "interview-podcast", "configuration": "with_skill", "expectations": [{"text": "has_attributed_quotes", "passed": true, "evidence": "Multiple direct quotes attributed to Rivera: 'You're adding enormous complexity...', 'They're like, We can't do any actual data science...', 'I know that sounds almost irresponsibly simple...'"}, {"text": "identifies_speakers", "passed": true, "evidence": "Sarah Chen identified as Host and Marcus Rivera as CTO of DataFlow Labs in the source/speaker metadata"}, {"text": "covers_complexity_tax", "passed": true, "evidence": "Dedicated section 'The Complexity Tax' with detailed explanation"}, {"text": "covers_recommended_stack", "passed": true, "evidence": "Dedicated section 'The Radically Simple AI Stack' listing Postgres+pgvector, OpenAI/Anthropic, Python, single server"}, {"text": "has_tldr", "passed": true, "evidence": "TL;DR section present with substantive 2-sentence summary"}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found"}, {"text": "not_qa_format", "passed": true, "evidence": "Organized by themes: Netflix Effect, Complexity Tax, Batch Processing, AI Over-engineering, Scaling Signals, Vendor Paradox, Stack - not Q&A"}, {"text": "preserves_netflix_effect", "passed": true, "evidence": "Dedicated section 'The Netflix Effect' with full explanation"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with headers, blockquote TL;DR, bullet lists"}]}}, {"id": "interview-podcast-without-skill", "prompt": "I've got this podcast transcript where Sarah Chen interviews Marcus Rivera about over-engineering data pipelines. Can you make it into a proper article? File: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/interview-podcast.txt", "eval_id": 1, "outputs": [{"name": "interview-podcast.md", "type": "text", "content": "# Most Companies Are Over-Engineering Their Data Pipelines\n\n*An interview with Marcus Rivera, CTO of DataFlow Labs*\n\nMarcus Rivera has been building data infrastructure for fifteen years. As CTO of DataFlow Labs, he has consulted with companies of all sizes on their data architecture -- and he has a controversial claim: most companies are over-engineering their data pipelines.\n\nIn a conversation on the AI Engineering podcast, Rivera laid out his case for radical simplicity, both in traditional data infrastructure and in the emerging world of AI applications.\n\n## The Netflix Effect\n\nThe pattern Rivera sees repeating is familiar to anyone in the data engineering world. A company starts with a simple ETL pipeline -- maybe using Airflow -- and it works fine. Then someone reads a blog post about how Netflix handles real-time streaming with Kafka, and suddenly everyone wants to rebuild everything to be real-time and event-driven.\n\n\"Netflix has 200 million subscribers generating massive amounts of data in real time. They actually need that infrastructure,\" Rivera said. \"But if you're a B2B SaaS company with ten thousand customers, you probably don't. You're adding enormous complexity for no real benefit.\"\n\nHis advice is deliberately unglamorous: start with batch processing. Run pipelines once a day or once an hour. For 90 percent of use cases, that is perfectly fine. Dashboards update hourly instead of in real time, and nobody actually notices.\n\nThat is not to say real-time processing never has a place. Fraud detection, recommendation engines, and monitoring and alerting are legitimate real-time use cases. But even in those scenarios, Rivera advocates a hybrid approach: keep most of the pipeline in batch mode and maintain only a thin real-time layer for the things that genuinely require it.\n\n## The Complexity Tax\n\nRivera frames the hidden costs of over-engineering as what he calls the \"complexity tax\" -- all the costs that people fail to account for when making architecture decisions.\n\nTake Kafka as an example. Once you adopt it, you need someone who understands Kafka. You need to manage partitions and consumer groups, handle rebalancing, deal with schema evolution, and monitor lag. If something goes wrong at 3 AM, someone has to understand all of it to fix it.\n\n\"I've consulted with companies that have five-person data teams spending 80 percent of their time just keeping Kafka and Flink running,\" Rivera said. \"They're like, 'We can't do any actual data science because all our time goes to infrastructure.' That's the complexity tax right there.\"\n\n## Applying the Philosophy to AI\n\nThe same principles extend to the current wave of AI application development, where a whole new category of pipeline complexity has emerged: embedding pipelines, vector databases, RAG systems, fine-tuning pipelines, and evaluation frameworks. The temptation is to build an elaborate system with all of these components from day one.\n\nRivera pushes back against that impulse. His recommendations for getting started:\n\n- **Skip the vector database on day one.** Just use a simple prompt with context included directly.\n- **Skip fine-tuning.** Start with few-shot prompting.\n- **Skip complex evaluation frameworks.** Start with what Rivera calls \"vibes-based evaluation\" -- a term he credits to Hamel Husain -- where you simply use the product and see if it feels right.\n\n\"For early-stage products, that's the right approach because you don't even know what 'good' looks like yet,\" he explained. \"Building elaborate benchmarks is premature optimization.\"\n\nThe key insight is that you will know when you need to scale, because you will hit a specific, identifiable problem. Your context window is too small for all your documents -- now you actually need RAG. Latency is too high -- now you need to cache embeddings. Prompt engineering is hitting a ceiling -- now fine-tuning might make sense. Each of those is a clear signal, and you add exactly the component you need, nothing more.\n\n## The Starter Stack\n\nFor anyone starting a new AI project, Rivera's recommended stack is almost aggressively minimal:\n\n- **Database:** PostgreSQL with pgvector\n- **LLM:** OpenAI or Anthropic API calls\n- **Pipeline:** A simple Python script\n- **Deployment:** A single server\n\n\"I know that sounds almost irresponsibly simple,\" Rivera admitted, \"but you would be amazed at how far that gets you. And when you need more complexity, you'll know -- and you can add it then.\"\n\n## The Bottom Line\n\nRivera's message cuts against the grain of an industry obsessed with adopting every new tool -- a stance he acknowledges is unusual for someone who is himself a vendor in the data infrastructure space.\n\n\"I genuinely believe that simpler is better,\" he said. \"The companies that win are the ones that ship products, not the ones with the most sophisticated infrastructure.\"\n\n---\n\n*Marcus Rivera can be found on Twitter at @marcus\\_rivera or on the DataFlow Labs blog at dataflowlabs.io/blog.*\n"}], "grading": {"eval_id": 1, "eval_name": "interview-podcast", "configuration": "without_skill", "expectations": [{"text": "has_attributed_quotes", "passed": true, "evidence": "Multiple quotes attributed to Rivera: 'Netflix has 200 million subscribers...', 'I've consulted with companies...'"}, {"text": "identifies_speakers", "passed": true, "evidence": "Sarah Chen mentioned in context, Marcus Rivera identified by name and role"}, {"text": "covers_complexity_tax", "passed": true, "evidence": "Dedicated section 'The Complexity Tax'"}, {"text": "covers_recommended_stack", "passed": true, "evidence": "'The Starter Stack' section with bullet list of recommended tools"}, {"text": "has_tldr", "passed": false, "evidence": "No TL;DR section present"}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found"}, {"text": "not_qa_format", "passed": true, "evidence": "Organized by themes: Netflix Effect, Complexity Tax, Applying to AI, Starter Stack - not Q&A"}, {"text": "preserves_netflix_effect", "passed": true, "evidence": "Dedicated section 'The Netflix Effect'"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with headers, italics, bold, bullet lists"}]}}, {"id": "multi-transcript-with-skill", "prompt": "I have a two-part youtube series on building production RAG systems. Part 1 covers retrieval, part 2 covers generation and evaluation. Please combine them into one comprehensive article.\n\nPart 1: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part1.txt\nPart 2: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part2.txt", "eval_id": 2, "outputs": [{"name": "building-production-rag-systems.md", "type": "text", "content": "# Building Production RAG Systems: A Complete Guide to Retrieval, Generation, and Evaluation\n\n> **TL;DR:** Retrieval-Augmented Generation (RAG) dramatically improves LLM answers by retrieving relevant documents from your own knowledge base and injecting them into the prompt. Building a production-quality RAG system requires careful attention across the full pipeline: chunking strategy, embedding model selection, retrieval enhancements like query expansion and reranking, structured prompt construction, hallucination detection, and rigorous evaluation with metrics like recall@k, MRR, and faithfulness. Each component can be added incrementally, but skipping evaluation and monitoring is the most common mistake teams make.\n\n**Source:** Building Production RAG Systems (Parts 1 & 2)\n\n---\n\n## What RAG Is and Why It Matters\n\nRAG \u00e2\u20ac\u201d retrieval-augmented generation \u00e2\u20ac\u201d is a pattern where, instead of relying solely on an LLM's training data, you retrieve relevant documents from your own knowledge base and insert them into the context window alongside the user's question. The model then generates an answer grounded in your specific data, producing much better and more accurate results than a standalone LLM can deliver.\n\nThe full pipeline spans two phases: **retrieval** (finding the right documents) and **generation** (producing a faithful, well-structured answer from those documents). Getting both right, and monitoring them in production, is what separates a prototype from a system you can actually trust.\n\n## Document Ingestion and Chunking\n\nThe first component of any RAG system is the document ingestion pipeline. Raw documents \u00e2\u20ac\u201d PDFs, web pages, and other formats \u00e2\u20ac\u201d need to be broken into smaller chunks before they can be embedded and searched.\n\nChunking is one of the most important and underrated parts of RAG. The tradeoffs are straightforward:\n\n- **Chunks that are too large** dilute the relevant information with surrounding noise.\n- **Chunks that are too small** lose the context needed to make sense of the content.\n- **The sweet spot** for most applications falls between 200 and 500 tokens, with roughly 50 tokens of overlap between adjacent chunks.\n\nThere is also a newer approach called **semantic chunking**, which uses embeddings to identify natural breakpoints in the text \u00e2\u20ac\u201d splitting where the topic changes rather than at arbitrary token boundaries. This produces more coherent chunks that better preserve meaning.\n\n## Embedding and Vector Storage\n\nAfter chunking, each chunk must be embedded using an embedding model. OpenAI's Ada model is the common default, but newer models from **Cohere** and **Voyage AI** outperform it for retrieval tasks specifically, because they were trained with retrieval objectives in mind.\n\nThese embeddings are stored in a vector database \u00e2\u20ac\u201d Pinecone, Weaviate, pgvector, or similar. At query time, the user's question is embedded with the same model, and a similarity search identifies the most relevant chunks.\n\n## Advanced Retrieval Techniques\n\nThe basic embed-and-search approach works, but several techniques make it work substantially better.\n\n### Query Expansion\n\nInstead of embedding only the raw user query, an LLM generates multiple variations of the question, and all variations are used for search. This addresses a fundamental problem: users often phrase their questions differently from how the answer is stated in the source documents.\n\n### Reranking with Cross-Encoders\n\nAfter retrieving the top 20 or so results from vector search, a **cross-encoder** model reranks them. Cross-encoders are far more accurate than embedding similarity for judging relevance, but they are too slow to run over an entire corpus. Using them as a second pass on a candidate set gives the best of both worlds. Cohere offers a dedicated reranking API for this purpose.\n\n### Metadata Filtering\n\nWhen documents are indexed, metadata such as date, source, and document type can be attached. At query time, filtering on this metadata *before* vector search narrows the results. This is especially important for **multi-tenant applications** where each user should only see their own documents.\n\n## Constructing Effective Prompts\n\nOnce the top-k chunks are retrieved, they need to be assembled into a prompt \u00e2\u20ac\u201d and this is where many teams stumble. The most common mistake is simply concatenating all chunks without structure and hoping for the best.\n\nThree practices dramatically improve generation quality:\n\n1. **Order chunks by relevance.** Place the most relevant chunks first in the prompt. LLMs tend to pay more attention to the beginning of the context \u00e2\u20ac\u201d a phenomenon documented in the \"lost in the middle\" paper from Stanford.\n\n2. **Add source citations to each chunk.** Instead of providing raw text, include the source document name, page number, date, and other available metadata. Instruct the model to cite its sources in the answer. This anchors the model to specific documents and dramatically reduces hallucinations.\n\n3. **Set a clear system prompt.** Tell the model to answer only based on the provided context and to respond with \"I don't know\" when the context does not contain the answer. For production systems, preventing the model from inventing information is critical.\n\n## Hallucination Detection\n\nEven with all of these guardrails, models will still occasionally hallucinate. Catching this requires a dedicated verification step.\n\nThe technique is called **grounded generation** or **faithfulness checking**: take the model's response and verify that each claim is actually supported by the retrieved context. This can be done with an additional LLM call or with **NLI (natural language inference) models** purpose-built for this kind of entailment checking.\n\n## Evaluation: The Hardest and Most Neglected Part\n\nMost teams do not evaluate their RAG systems at all \u00e2\u20ac\u201d they \"vibe check\" the output and move on. That is acceptable for prototyping, but production systems require metrics.\n\n### Retrieval Metrics\n\n- **Recall@k** \u00e2\u20ac\u201d Measures whether the relevant documents appear anywhere in the top-k results.\n- **MRR (Mean Reciprocal Rank)** \u00e2\u20ac\u201d Measures how highly the relevant document is ranked; a relevant document at position 1 scores much higher than one at position 10.\n\n### Generation Metrics\n\n- **Faithfulness** \u00e2\u20ac\u201d Measures whether the generated answer is actually supported by the retrieved context.\n- **Answer relevance** \u00e2\u20ac\u201d Measures whether the answer addresses the user's question.\n\nThe **RAGAS** framework (Retrieval-Augmented Generation Assessment) automates much of this evaluation, providing these metrics out of the box against a test set of question-answer pairs.\n\n## Production Monitoring and Cost Management\n\nBeyond offline evaluation, production systems need ongoing monitoring:\n\n- **Average retrieval score** \u00e2\u20ac\u201d How similar are the retrieved chunks to the query on average?\n- **Answer latency** \u00e2\u20ac\u201d How long does the full pipeline take end to end?\n- **User feedback** \u00e2\u20ac\u201d Thumbs-up/thumbs-down signals from actual users.\n\nCost is also a practical concern. RAG can get expensive, especially when using models like GPT-4 or Claude for generation and high-quality embedding models for retrieval. Strategies to manage costs include **caching common queries**, **routing simple questions to cheaper models**, and **batching embedding calls**.\n\n## Key Takeaways\n\n- RAG retrieves your own documents and injects them into the LLM's context, producing answers grounded in your specific data rather than general training knowledge.\n- Chunking strategy matters enormously \u00e2\u20ac\u201d aim for 200-500 tokens with overlap, or use semantic chunking for more coherent segments.\n- Newer embedding models from Cohere and Voyage AI outperform OpenAI Ada for retrieval-specific tasks.\n- Query expansion, cross-encoder reranking, and metadata filtering each substantially improve retrieval quality beyond basic vector search.\n- Structure your prompts deliberately: order by relevance, include source citations, and instruct the model to say \"I don't know\" when context is insufficient.\n- Implement faithfulness checking to catch hallucinations, even after applying all other guardrails.\n- Evaluate with real metrics (recall@k, MRR, faithfulness, answer relevance) \u00e2\u20ac\u201d \"vibe checking\" is not enough for production.\n- Monitor retrieval scores, latency, and user feedback continuously in production.\n- The pipeline has many components, but they can be added incrementally \u00e2\u20ac\u201d you do not need everything on day one.\n\n---\n\n*Sources: Building Production RAG Systems \u00e2\u20ac\u201d Part 1: Retrieval; Building Production RAG Systems \u00e2\u20ac\u201d Part 2: Generation and Evaluation*\n"}], "grading": {"eval_id": 2, "eval_name": "multi-transcript-synthesis", "configuration": "with_skill", "expectations": [{"text": "unified_article", "passed": true, "evidence": "Single cohesive article organized by theme. No 'Part 1' or 'Part 2' divisions. Content from both transcripts woven together seamlessly."}, {"text": "covers_chunking", "passed": true, "evidence": "Dedicated section 'Document Ingestion and Chunking' covering token ranges, overlap, semantic chunking"}, {"text": "covers_reranking", "passed": true, "evidence": "'Reranking with Cross-Encoders' subsection under Advanced Retrieval Techniques"}, {"text": "covers_hallucination", "passed": true, "evidence": "Dedicated section 'Hallucination Detection' covering grounded generation and faithfulness checking"}, {"text": "covers_ragas", "passed": true, "evidence": "RAGAS mentioned in Evaluation section as automated evaluation framework"}, {"text": "has_tldr", "passed": true, "evidence": "TL;DR blockquote at top with comprehensive summary"}, {"text": "has_key_takeaways", "passed": true, "evidence": "Key Takeaways section with 9 bullet points"}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found"}, {"text": "has_sources", "passed": true, "evidence": "Sources footer: 'Building Production RAG Systems \u00e2\u20ac\u201d Part 1: Retrieval; Building Production RAG Systems \u00e2\u20ac\u201d Part 2: Generation and Evaluation'"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with H1, H2, H3, blockquote, bullet lists, bold"}]}}, {"id": "multi-transcript-without-skill", "prompt": "I have a two-part youtube series on building production RAG systems. Part 1 covers retrieval, part 2 covers generation and evaluation. Please combine them into one comprehensive article.\n\nPart 1: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part1.txt\nPart 2: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part2.txt", "eval_id": 2, "outputs": [{"name": "building-production-rag-systems.md", "type": "text", "content": "# Building Production RAG Systems: A Complete Guide to Retrieval, Generation, and Evaluation\n\nRetrieval Augmented Generation (RAG) has become one of the most important patterns in applied AI. Instead of relying solely on an LLM's training data, RAG retrieves relevant documents from your own knowledge base and includes them in the context window alongside the user's question. The result is much better answers grounded in your specific data. But building a RAG system that actually works in production involves many moving parts, from document ingestion all the way through to monitoring. This guide walks through the full pipeline.\n\n## What Is RAG?\n\nAt its core, RAG is a simple idea: give the model access to your data at inference time. The user asks a question, you search your knowledge base for relevant information, stuff that information into the prompt, and let the model generate an answer that draws on it. This avoids the need to fine-tune a model on your data and keeps answers current as your knowledge base changes.\n\n## The Retrieval Pipeline\n\nThe retrieval side of RAG is responsible for finding the right information before the model ever sees the question. It has several key components.\n\n### Document Ingestion and Chunking\n\nThe first step is a document ingestion pipeline. You take your raw documents -- PDFs, web pages, internal docs, whatever you have -- and break them into smaller pieces called chunks.\n\nChunking is one of the most important and underrated parts of RAG. If your chunks are too large, the relevant information gets diluted by surrounding text. If they are too small, they lose the context needed to be useful. For most applications, the sweet spot is somewhere between 200 and 500 tokens, with roughly 50 tokens of overlap between consecutive chunks to preserve continuity.\n\nThere is also a newer approach called **semantic chunking**, where instead of splitting on a fixed token count, you use embeddings to identify natural breakpoints in the text -- essentially splitting where the topic changes. This produces more coherent chunks that better represent distinct ideas.\n\n### Embedding\n\nAfter chunking, each chunk gets converted into a vector representation using an embedding model. OpenAI's Ada model is a common default choice, but newer models from Cohere and Voyage AI tend to perform better for retrieval specifically because they have been trained with retrieval objectives in mind.\n\n### Vector Storage and Search\n\nThe embeddings are stored in a vector database -- Pinecone, Weaviate, pgvector, or similar. At query time, the user's question is embedded using the same model, and a similarity search finds the most relevant chunks.\n\n## Advanced Retrieval Techniques\n\nThe basic retrieve-by-similarity approach works reasonably well, but several techniques can improve it significantly.\n\n### Query Expansion\n\nInstead of embedding the raw user query directly, you can use an LLM to generate multiple variations of the query and search with all of them. This helps when the user phrases their question differently from how the answer is stated in your documents.\n\n### Reranking\n\nA two-stage retrieval process often works best. First, retrieve a broader set of candidates (say, the top 20 results) from the vector search. Then use a cross-encoder model to rerank them. Cross-encoders are much more accurate than embedding similarity for judging relevance, but they are too slow to run over an entire corpus, which is why they work as a second pass. Cohere offers a well-regarded reranking API for this purpose.\n\n### Metadata Filtering\n\nWhen indexing documents, attach metadata such as date, source, and document type. At query time, you can filter on this metadata before performing the vector search. This is especially valuable for multi-tenant applications, where each user should only see results from their own documents.\n\n## The Generation Pipeline\n\nOnce you have retrieved your top-K chunks, the next challenge is constructing a prompt that gets the best possible answer out of the model. This is where many teams stumble.\n\nThe most common mistake is dumping all retrieved chunks into the prompt without any structure -- just concatenating them and hoping for the best. The model can work with that, but structured context produces noticeably better results.\n\n### Ordering by Relevance\n\nPlace the most relevant chunks first in the context. LLMs tend to pay more attention to information at the beginning of the context window, a phenomenon documented in a Stanford paper on the \"lost in the middle\" problem. Leading with the strongest evidence makes it more likely the model will use it.\n\n### Adding Source Citations\n\nInstead of including raw text alone, annotate each chunk with its source: document name, page number, date, and any other available metadata. Then instruct the model to cite its sources in the answer. This dramatically reduces hallucinations because the model is anchored to specific, identifiable documents.\n\n### Setting Clear Boundaries\n\nUse a system prompt that explicitly tells the model to answer only based on the provided context and to say \"I don't know\" if the context does not contain the answer. For production systems, this is crucial -- you do not want the model fabricating information when it lacks the relevant data.\n\n## Handling Hallucinations\n\nEven with well-structured prompts and clear instructions, models will occasionally hallucinate. You need a mechanism to catch this.\n\nOne effective technique is **faithfulness checking** (also called grounded generation). After the model produces a response, you verify that each claim in the response is actually supported by the retrieved context. This verification can be done with an additional LLM call or with Natural Language Inference (NLI) models that are specifically designed to check textual entailment.\n\n## Evaluation\n\nEvaluation is arguably the hardest part of building RAG systems. Many teams rely on informal \"vibe checks,\" which is fine during prototyping but insufficient for production.\n\n### Retrieval Metrics\n\n- **Recall@K**: Measures whether the relevant documents appear in your top-K results.\n- **Mean Reciprocal Rank (MRR)**: Measures how high the first relevant document is ranked.\n\n### Generation Metrics\n\n- **Faithfulness**: Measures whether the answer is supported by the retrieved context.\n- **Answer Relevance**: Measures whether the answer actually addresses the user's question.\n\n### Automated Evaluation with RAGAS\n\nThe RAGAS framework (Retrieval Augmented Generation Assessment) automates much of this evaluation. It provides retrieval and generation metrics out of the box and can be run against a test set of question-answer pairs, giving you a repeatable way to measure system quality.\n\n## Production Monitoring\n\nIn production, ongoing monitoring is essential. Key metrics to track include:\n\n- **Average retrieval score**: How similar are the retrieved chunks to the query on average?\n- **Answer latency**: How long does the entire pipeline take end to end?\n- **User feedback**: Simple signals like thumbs up / thumbs down provide direct quality indicators.\n\n## Managing Costs\n\nRAG pipelines can get expensive, particularly when using top-tier models like GPT-4 or Claude for generation and high-quality embedding models for retrieval. Several strategies help manage costs:\n\n- **Cache common queries** so repeated questions do not trigger the full pipeline.\n- **Route simple questions to cheaper models**, reserving expensive models for complex queries.\n- **Batch embedding calls** to reduce per-request overhead during ingestion.\n\n## The Full Pipeline at a Glance\n\nPutting it all together, a production RAG pipeline looks like this:\n\n1. **Ingest** documents and **chunk** them intelligently.\n2. **Embed** chunks and store them in a vector database.\n3. At query time, **embed the query** and **retrieve** the most relevant chunks.\n4. Optionally **rerank** the results with a cross-encoder.\n5. **Construct a structured prompt** with ordered, cited context and clear instructions.\n6. **Generate** the answer.\n7. **Check for hallucinations** using faithfulness verification.\n8. **Monitor** everything in production.\n\nEach component serves a specific purpose, and you can add them incrementally. You do not need all of this on day one -- start with the basics and layer in advanced techniques as your system matures.\n"}], "grading": {"eval_id": 2, "eval_name": "multi-transcript-synthesis", "configuration": "without_skill", "expectations": [{"text": "unified_article", "passed": true, "evidence": "Single article with thematic organization. No Part 1/Part 2 labels, though the structure does follow the original order somewhat (retrieval topics first, then generation)."}, {"text": "covers_chunking", "passed": true, "evidence": "Dedicated 'Document Ingestion and Chunking' section"}, {"text": "covers_reranking", "passed": true, "evidence": "'Reranking' subsection covering cross-encoders and Cohere API"}, {"text": "covers_hallucination", "passed": true, "evidence": "'Handling Hallucinations' section covering faithfulness checking and NLI models"}, {"text": "covers_ragas", "passed": true, "evidence": "RAGAS framework mentioned under 'Automated Evaluation with RAGAS' heading"}, {"text": "has_tldr", "passed": false, "evidence": "No TL;DR section present. Article starts directly with introduction paragraph."}, {"text": "has_key_takeaways", "passed": false, "evidence": "No Key Takeaways section. Has 'The Full Pipeline at a Glance' numbered list instead, which is different."}, {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found"}, {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found"}, {"text": "has_sources", "passed": false, "evidence": "No sources section at the end of the article"}, {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with headers, bold, bullet lists, numbered list"}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"skill_name": "yt-transcript-to-article", "iteration": 1, "configurations": [{"name": "with_skill", "evals": [{"eval_name": "solo-tech-talk", "pass_rate": 1.0, "passed": 10, "total": 10, "duration_seconds": 186.4, "total_tokens": 14717}, {"eval_name": "interview-podcast", "pass_rate": 1.0, "passed": 10, "total": 10, "duration_seconds": 192.8, "total_tokens": 15506}, {"eval_name": "multi-transcript-synthesis", "pass_rate": 1.0, "passed": 11, "total": 11, "duration_seconds": 206.0, "total_tokens": 16227}], "aggregate": {"mean_pass_rate": 1.0, "stddev_pass_rate": 0.0, "mean_duration_seconds": 195.1, "mean_tokens": 15483}}, {"name": "without_skill", "evals": [{"eval_name": "solo-tech-talk", "pass_rate": 0.8, "passed": 8, "total": 10, "duration_seconds": 161.2, "total_tokens": 12108}, {"eval_name": "interview-podcast", "pass_rate": 0.9, "passed": 9, "total": 10, "duration_seconds": 189.7, "total_tokens": 12751}, {"eval_name": "multi-transcript-synthesis", "pass_rate": 0.727, "passed": 8, "total": 11, "duration_seconds": 203.2, "total_tokens": 13798}], "aggregate": {"mean_pass_rate": 0.809, "stddev_pass_rate": 0.087, "mean_duration_seconds": 184.7, "mean_tokens": 12886}}], "delta": {"pass_rate_improvement": 0.191, "duration_increase_seconds": 10.4, "token_increase": 2597}, "analysis": ["The skill consistently adds TL;DR, Key Takeaways, and Sources sections that the baseline omits \u00e2\u20ac\u201d these are the primary structural improvements.", "The baseline handles content extraction and thematic organization well on its own \u00e2\u20ac\u201d both versions clean up filler words and timestamps reliably.", "The skill costs ~20% more tokens and ~5% more time, which is a reasonable tradeoff for the structural guarantees.", "The biggest win is on multi-transcript synthesis (eval 2): the skill version includes TL;DR, Key Takeaways, and Sources that the baseline skips entirely (3 extra assertions passed).", "Non-discriminating assertions: no_timestamps, no_filler_words, valid_markdown, and content-coverage checks all pass regardless of skill \u00e2\u20ac\u201d these test baseline Claude capability, not skill value."]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

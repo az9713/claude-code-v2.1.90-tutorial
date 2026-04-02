@@ -1,0 +1,17 @@
+{
+  "eval_id": 0,
+  "eval_name": "solo-tech-talk",
+  "configuration": "with_skill",
+  "expectations": [
+    {"text": "has_descriptive_title", "passed": true, "evidence": "Title is 'Vector Databases: What They Are, How They Differ, and Which One to Choose for AI Applications' - descriptive and engaging"},
+    {"text": "has_tldr", "passed": true, "evidence": "TL;DR section present at line 3 with substantive 3-sentence summary"},
+    {"text": "has_thematic_sections", "passed": true, "evidence": "Sections organized by theme: 'Why Traditional Databases Fall Short', 'The Major Vector Database Options', 'Choosing the Right Database', 'Indexing Algorithms', 'Embedding Models Matter More' - not chronological"},
+    {"text": "has_key_takeaways", "passed": true, "evidence": "Key Takeaways section present with 8 bullet points"},
+    {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found in output"},
+    {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found in output"},
+    {"text": "mentions_all_databases", "passed": true, "evidence": "Pinecone, Weaviate, ChromaDB, pgvector all have dedicated subsections"},
+    {"text": "mentions_hnsw", "passed": true, "evidence": "HNSW explained in 'Underappreciated Role of Indexing Algorithms' section"},
+    {"text": "mentions_embedding_importance", "passed": true, "evidence": "Dedicated section 'Embedding Models Matter More Than the Database' with bold emphasis"},
+    {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with H1, H2, H3 headers, bold text, bullet lists"}
+  ]
+}

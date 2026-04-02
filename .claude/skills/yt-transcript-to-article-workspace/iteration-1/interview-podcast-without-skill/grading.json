@@ -1,0 +1,17 @@
+{
+  "eval_id": 1,
+  "eval_name": "interview-podcast",
+  "configuration": "without_skill",
+  "expectations": [
+    {"text": "has_attributed_quotes", "passed": true, "evidence": "Multiple quotes attributed to Rivera: 'Netflix has 200 million subscribers...', 'I've consulted with companies...'"},
+    {"text": "identifies_speakers", "passed": true, "evidence": "Sarah Chen mentioned in context, Marcus Rivera identified by name and role"},
+    {"text": "covers_complexity_tax", "passed": true, "evidence": "Dedicated section 'The Complexity Tax'"},
+    {"text": "covers_recommended_stack", "passed": true, "evidence": "'The Starter Stack' section with bullet list of recommended tools"},
+    {"text": "has_tldr", "passed": false, "evidence": "No TL;DR section present"},
+    {"text": "no_timestamps", "passed": true, "evidence": "No timestamps found"},
+    {"text": "no_filler_words", "passed": true, "evidence": "No 'um' or 'uh' found"},
+    {"text": "not_qa_format", "passed": true, "evidence": "Organized by themes: Netflix Effect, Complexity Tax, Applying to AI, Starter Stack - not Q&A"},
+    {"text": "preserves_netflix_effect", "passed": true, "evidence": "Dedicated section 'The Netflix Effect'"},
+    {"text": "valid_markdown", "passed": true, "evidence": "Proper markdown with headers, italics, bold, bullet lists"}
+  ]
+}

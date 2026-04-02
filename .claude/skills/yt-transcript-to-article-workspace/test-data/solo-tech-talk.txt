@@ -1,0 +1,95 @@
+0:00 hey everyone um welcome back to the channel today
+0:03 we're going to talk about something that I think is
+0:05 really really important and that is uh vector databases
+0:08 and why they matter for AI applications so
+0:12 um let me just kind of set the stage here right so
+0:15 you know traditional databases like postgres mysql
+0:18 they store data in rows and columns right and thats
+0:21 great for like structured data but when you're dealing
+0:24 with AI and machine learning you need something different
+0:27 you need to store embeddings which are basically these
+0:30 like high dimensional vectors that represent the meaning
+0:33 of text or images or whatever
+0:36 so um the the key insight here is that similar things
+0:40 have similar vectors right so if I have two sentences
+0:43 that mean roughly the same thing their vectors will be
+0:46 close together in this high dimensional space and thats
+0:49 what makes semantic search possible
+0:52 now there are several vector databases out there
+0:55 you've got pinecone which is like the the managed solution
+0:58 you've got weaviate which is open source uh chromadb
+1:01 which is really popular for prototyping and then you've
+1:04 got pgvector which lets you add vector capabilities
+1:07 to your existing postgres database
+1:10 so lets talk about each of these um so pinecone
+1:13 pinecone is probably the most well known its a fully
+1:16 managed service so you dont have to worry about
+1:19 infrastructure at all you just send your vectors and
+1:22 query them its really fast um the downside is its
+1:25 proprietary and it can get expensive at scale
+1:28 weaviate on the other hand is open source which is great
+1:31 you can self host it or use their cloud service
+1:34 it has this really cool feature called modules where you
+1:37 can plug in different vectorizers so you can use
+1:40 openai embeddings or hugging face models or whatever
+1:43 um it also supports hybrid search which combines
+1:46 vector search with traditional keyword search and thats
+1:49 actually really powerful because sometimes you want
+1:52 exact matches not just semantic similarity
+1:55 chromadb is I think the easiest to get started with
+1:58 its designed for like local development and prototyping
+2:01 you can literally pip install it and start using it
+2:04 in like five minutes its great for building demos
+2:07 but um you know for production workloads you probably
+2:10 want something more robust
+2:13 and then pgvector this is interesting because a lot of
+2:16 companies already have postgres right so instead of
+2:19 adding another database to your stack you just add the
+2:22 pgvector extension and now your postgres can do vector
+2:25 search too the performance isnt as good as dedicated
+2:28 vector databases for really large scale stuff but for
+2:31 most applications its totally fine and you get the
+2:34 benefit of having everything in one database
+2:37 so um which one should you use well it depends right
+2:40 if you're just prototyping go with chromadb if you need
+2:43 a managed solution and budget isnt a concern pinecone
+2:46 is great if you want open source and flexibility
+2:49 weaviate is awesome and if you already have postgres
+2:52 and your scale is moderate pgvector is probably the
+2:55 smart choice
+2:58 now let me talk about something thats I think
+3:01 underappreciated which is the indexing algorithms
+3:04 so most vector databases use something called HNSW
+3:07 which stands for hierarchical navigable small world
+3:10 graphs and the basic idea is you build this graph
+3:13 structure where each vector is connected to its nearest
+3:16 neighbors and then when you search you navigate through
+3:19 this graph to find the closest matches its not exact
+3:22 its approximate but its really fast like O log n fast
+3:25 and the accuracy is usually above 95 percent which is
+3:28 good enough for most applications
+3:31 theres also IVF which is inverted file index and
+3:34 product quantization PQ which compresses vectors
+3:37 to use less memory these are more common in like
+3:40 faiss which is facebooks vector search library
+3:43 um the tradeoff is always between speed accuracy and
+3:46 memory usage and you have to tune these parameters
+3:49 for your specific use case
+3:52 one more thing I want to mention is that the embedding
+3:55 model you choose matters a lot more than the database
+3:58 you know people obsess over which vector database to use
+4:01 but honestly the quality of your embeddings is what
+4:04 determines whether your search results are good
+4:07 so spend time evaluating different embedding models
+4:10 like openai's ada model or the newer embedding models
+4:13 from cohere or the open source ones from sentence
+4:16 transformers and test them on your actual data
+4:19 dont just go with whatever is popular
+4:22 alright so to wrap up vector databases are essential
+4:25 infrastructure for AI applications there are great
+4:28 options at every price point and level of complexity
+4:31 the most important thing is to match your choice to
+4:34 your actual needs not just go with hype um and remember
+4:37 the embedding model matters more than the database
+4:40 thanks for watching and uh yeah drop a comment if you
+4:43 have questions see you next time

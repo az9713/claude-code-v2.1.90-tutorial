@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Monitor</title>
+<style>
+:root {
+  --bg-body: #0f1419;
+  --bg-card: #1a1f2e;
+  --bg-card-hover: #1f2537;
+  --bg-header: #151a25;
+  --border-color: #2a3040;
+  --border-subtle: #232938;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6b7280;
+  --blue: #3b82f6;
+  --green: #10b981;
+  --purple: #8b5cf6;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --orange: #f97316;
+  --gray: #6b7280;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Header */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 24px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-title svg { width: 20px; height: 20px; }
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  transition: background var(--transition);
+}
+
+.status-dot.connected { background: var(--green); }
+
+.header-stats {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.header-stats span { font-weight: 600; color: var(--text-primary); }
+
+.refresh-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all var(--transition);
+}
+.refresh-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Main content */
+main {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+/* Session Card */
+.session-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.session-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--blue);
+}
+.session-card.stale {
+  opacity: 0.55;
+}
+.session-card.stale:hover {
+  opacity: 0.8;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.card-status.alive { background: var(--green); box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
+.card-status.idle { background: var(--yellow); box-shadow: 0 0 6px rgba(234, 179, 8, 0.3); }
+.card-status.dead { background: var(--red); opacity: 0.6; }
+
+.card-project {
+  font-weight: 600;
+  font-size: 15px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-uptime {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-meta-item .label { color: var(--text-muted); }
+
+.card-prompt {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.badge.solo { background: rgba(107, 114, 128, 0.2); color: var(--gray); }
+.badge.team-lead { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
+.badge.team-member { background: rgba(59, 130, 246, 0.2); color: var(--blue); }
+
+.card-footer .last-active {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+/* Expanded card detail */
+.card-detail {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.card-detail.open { display: block; }
+
+.card-detail .detail-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.card-detail .detail-label {
+  color: var(--text-muted);
+  min-width: 80px;
+}
+
+
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+.empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Session Monitor
+    </div>
+    <div class="connection-status">
+      <div class="status-dot" id="connDot"></div>
+      <span id="connLabel">Connecting...</span>
+    </div>
+    <div class="header-stats" id="headerStats"></div>
+    <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  </header>
+
+  <main id="main">
+    <div class="empty-state" id="emptyState">
+      <div class="icon">...</div>
+      <p>Connecting to session monitor...</p>
+    </div>
+  </main>
+</div>
+
+<script>
+(function() {
+  // State
+  let sessions = [];
+  let ws = null;
+  let connected = false;
+
+  // DOM refs
+  const connDot = document.getElementById('connDot');
+  const connLabel = document.getElementById('connLabel');
+  const headerStats = document.getElementById('headerStats');
+  const mainEl = document.getElementById('main');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const emptyState = document.getElementById('emptyState');
+
+  // ---- WebSocket ----
+
+  function connect() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${protocol}//${location.host}`);
+
+    ws.onopen = () => {
+      connected = true;
+      connDot.classList.add('connected');
+      connLabel.textContent = 'Connected';
+    };
+
+    ws.onclose = () => {
+      connected = false;
+      connDot.classList.remove('connected');
+      connLabel.textContent = 'Disconnected';
+      setTimeout(connect, 3000);
+    };
+
+    ws.onerror = () => {};
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        handleMessage(msg);
+      } catch (e) {
+        console.warn('Bad WS message:', e);
+      }
+    };
+  }
+
+  function handleMessage(msg) {
+    switch (msg.type) {
+      case 'full_state':
+        sessions = msg.data.sessions || [];
+        render();
+        break;
+      case 'sessions_update':
+        sessions = msg.data.sessions || [];
+        render();
+        break;
+      case 'session_removed':
+        sessions = sessions.filter(s => s.sessionId !== msg.data.sessionId);
+        render();
+        break;
+      case 'heartbeat':
+        // keep-alive, nothing to render
+        break;
+    }
+  }
+
+  refreshBtn.addEventListener('click', () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'refresh' }));
+    }
+  });
+
+  // ---- Rendering ----
+
+  function render() {
+    // Sort: alive first (by lastActivity desc), then dead
+    const sorted = [...sessions].sort((a, b) => {
+      if (a.isAlive !== b.isAlive) return a.isAlive ? -1 : 1;
+      const aTime = a.lastActivity || a.modified || '';
+      const bTime = b.lastActivity || b.modified || '';
+      return bTime.localeCompare(aTime);
+    });
+
+    const alive = sorted.filter(s => s.isAlive);
+    const stale = sorted.filter(s => !s.isAlive);
+
+    // Update header stats
+    headerStats.innerHTML = `<span>${alive.length}</span> active` +
+      (stale.length ? ` / <span>${stale.length}</span> stale` : '');
+
+    if (sorted.length === 0) {
+      mainEl.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">~</div>
+          <p>No Claude Code sessions found</p>
+        </div>`;
+      return;
+    }
+
+    let html = '';
+
+    if (alive.length > 0) {
+      html += `<div class="section-title">Active Sessions</div>`;
+      html += `<div class="cards-grid">`;
+      alive.forEach(s => { html += renderCard(s); });
+      html += `</div>`;
+    }
+
+    if (stale.length > 0) {
+      html += `<div class="section-title">Stale / Ended</div>`;
+      html += `<div class="cards-grid">`;
+      stale.forEach(s => { html += renderCard(s); });
+      html += `</div>`;
+    }
+
+    mainEl.innerHTML = html;
+
+    // Attach click handlers
+    mainEl.querySelectorAll('.session-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const detail = card.querySelector('.card-detail');
+        if (detail) detail.classList.toggle('open');
+      });
+    });
+
+  }
+
+  function renderCard(s) {
+    const statusClass = !s.isAlive ? 'dead' : isIdle(s) ? 'idle' : 'alive';
+    const staleClass = !s.isAlive ? 'stale' : '';
+
+    return `
+      <div class="session-card ${staleClass}" data-session-id="${esc(s.sessionId)}">
+        <div class="card-header">
+          <div class="card-status ${statusClass}"></div>
+          <div class="card-project">${esc(s.projectName || 'Unknown')}</div>
+          <div class="card-uptime">${formatUptime(s.startedAt)}</div>
+        </div>
+        <div class="card-meta">
+          <div class="card-meta-item"><span class="label">PID</span> ${s.pid}</div>
+          ${s.gitBranch ? `<div class="card-meta-item"><span class="label">Branch</span> ${esc(s.gitBranch)}</div>` : ''}
+          ${s.messageCount != null ? `<div class="card-meta-item"><span class="label">Msgs</span> ${s.messageCount}</div>` : ''}
+        </div>
+        ${s.firstPrompt ? `<div class="card-prompt">"${esc(truncate(s.firstPrompt, 120))}"</div>` : ''}
+        <div class="card-footer">
+          <span class="badge ${s.sessionType || 'solo'}">${formatType(s)}</span>
+          ${s.hasSubagents ? '<span class="badge team-member">subagents</span>' : ''}
+          <span class="last-active">${formatLastActive(s)}</span>
+        </div>
+        <div class="card-detail">
+          <div class="detail-row"><span class="detail-label">Session ID</span> ${esc(s.sessionId || '')}</div>
+          <div class="detail-row"><span class="detail-label">Working Dir</span> ${esc(s.cwd || '')}</div>
+          ${s.teamName ? `<div class="detail-row"><span class="detail-label">Team</span> ${esc(s.teamName)}</div>` : ''}
+          <div class="detail-row"><span class="detail-label">Started</span> ${s.startedAt ? new Date(s.startedAt).toLocaleString() : 'Unknown'}</div>
+        </div>
+      </div>`;
+  }
+
+  // ---- Helpers ----
+
+  function isIdle(s) {
+    if (!s.lastActivity) return false;
+    const idleMs = Date.now() - new Date(s.lastActivity).getTime();
+    return idleMs > 5 * 60 * 1000; // 5 minutes
+  }
+
+  function formatUptime(startedAt) {
+    if (!startedAt) return '';
+    const ms = Date.now() - new Date(startedAt).getTime();
+    const mins = Math.floor(ms / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    if (hrs < 24) return `${hrs}h${remMins}m`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d${hrs % 24}h`;
+  }
+
+  function formatLastActive(s) {
+    const ts = s.lastActivity || s.modified;
+    if (!ts) return '';
+    const ms = Date.now() - new Date(ts).getTime();
+    const secs = Math.floor(ms / 1000);
+    if (secs < 60) return `${secs}s ago`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    return `${hrs}h ago`;
+  }
+
+  function formatType(s) {
+    const t = s.sessionType || 'solo';
+    if (t === 'team-lead') return 'Team Lead';
+    if (t === 'team-member') return 'Team Member';
+    return 'Solo';
+  }
+
+  function truncate(str, max) {
+    if (!str) return '';
+    return str.length > max ? str.slice(0, max) + '...' : str;
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+
+  // ---- Init ----
+  connect();
+})();
+</script>
+</body>
+</html>

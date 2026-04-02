@@ -1,0 +1,26 @@
+{
+  "skill_name": "yt-transcript-to-article",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "hey can you turn this transcript into a readable article? it's from a youtube video about vector databases. the file is at ~/.claude/skills/yt-transcript-to-article-workspace/test-data/solo-tech-talk.txt",
+      "expected_output": "A well-structured markdown article covering vector databases (Pinecone, Weaviate, ChromaDB, pgvector), indexing algorithms (HNSW, IVF, PQ), and the importance of embedding model choice. Should have title, TL;DR, thematic sections, and key takeaways.",
+      "files": ["~/.claude/skills/yt-transcript-to-article-workspace/test-data/solo-tech-talk.txt"]
+    },
+    {
+      "id": 1,
+      "prompt": "I've got this podcast transcript where Sarah Chen interviews Marcus Rivera about over-engineering data pipelines. Can you make it into a proper article? File: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/interview-podcast.txt",
+      "expected_output": "A polished article with attributed quotes from both speakers, organized by theme (over-engineering, complexity tax, AI applications, recommended stack). Should preserve Marcus's personality and specific advice. Multi-speaker handling with proper attribution.",
+      "files": ["~/.claude/skills/yt-transcript-to-article-workspace/test-data/interview-podcast.txt"]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a two-part youtube series on building production RAG systems. Part 1 covers retrieval, part 2 covers generation and evaluation. Please combine them into one comprehensive article.\n\nPart 1: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part1.txt\nPart 2: ~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part2.txt",
+      "expected_output": "A single unified article synthesizing both parts. Should cover the full RAG pipeline (chunking, embedding, retrieval, reranking, prompt construction, hallucination detection, evaluation, monitoring, cost). Organized thematically, not 'Part 1/Part 2'. De-duplicated where topics overlap.",
+      "files": [
+        "~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part1.txt",
+        "~/.claude/skills/yt-transcript-to-article-workspace/test-data/series-part2.txt"
+      ]
+    }
+  ]
+}

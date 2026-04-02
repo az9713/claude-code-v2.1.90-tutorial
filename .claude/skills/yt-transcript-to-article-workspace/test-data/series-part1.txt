@@ -1,0 +1,64 @@
+0:00 hey whats up everyone this is part one of our deep dive
+0:03 into building production RAG systems so um if you've
+0:06 been following along you know we've been talking about
+0:09 retrieval augmented generation and today we're going to
+0:12 cover the retrieval side of things
+0:15 so first off what is RAG right RAG is basically a pattern
+0:18 where instead of relying solely on the LLMs training data
+0:21 you retrieve relevant documents from your own knowledge
+0:24 base and stuff them into the context window along with
+0:27 the users question and this gives you much better answers
+0:30 because the model has access to your specific data
+0:33 now the retrieval pipeline has several components lets
+0:36 walk through them um first you need a document ingestion
+0:39 pipeline this is where you take your raw documents
+0:42 PDFs web pages whatever and you chunk them into
+0:45 smaller pieces
+0:48 chunking is actually one of the most important and
+0:51 underrated parts of RAG if your chunks are too big
+0:54 they dilute the relevant information if theyre too small
+0:57 they lose context the sweet spot for most applications
+1:00 is somewhere between 200 and 500 tokens with maybe
+1:03 50 tokens of overlap between chunks
+1:06 but theres a newer approach called semantic chunking
+1:09 where instead of just splitting on token count you
+1:12 actually use embeddings to find natural breakpoints
+1:15 in the text so you split where the topic changes
+1:18 and this gives you much more coherent chunks
+1:21 after chunking you need to embed each chunk using
+1:24 an embedding model weve talked about this before
+1:27 openai ada is the default choice but honestly the
+1:30 newer models from cohere and voyage ai are better
+1:33 for retrieval specifically because theyve been trained
+1:36 with retrieval in mind
+1:39 then you store these embeddings in a vector database
+1:42 pinecone weaviate pgvector whatever weve covered that
+1:45 and at query time the users question gets embedded
+1:48 with the same model and you do a similarity search
+1:51 to find the most relevant chunks
+1:54 now heres where it gets interesting the basic approach
+1:57 I just described works okay but theres a bunch of
+2:00 tricks to make it work much better
+2:03 first is query expansion instead of just embedding the
+2:06 raw user query you can use an LLM to generate multiple
+2:09 variations of the query and search with all of them
+2:12 this helps because the user might phrase their question
+2:15 differently from how the answer is stated in your docs
+2:18 second is reranking so you retrieve maybe your top 20
+2:21 results from the vector search and then you use a
+2:24 cross encoder model to rerank them a cross encoder
+2:27 is much more accurate than embedding similarity but
+2:30 its too slow to run over your entire corpus so you
+2:33 use it as a second pass on the candidates from
+2:36 vector search cohere has a great reranking API for this
+2:39 third is metadata filtering so when you index your
+2:42 documents you attach metadata like date source document
+2:45 type whatever and at query time you can filter on this
+2:48 metadata before doing vector search this is huge for
+2:51 multi tenant applications where each user should only
+2:54 see their own documents
+2:57 okay thats the retrieval side in the next video well
+3:00 cover the generation side how to actually construct
+3:03 good prompts with your retrieved context handle
+3:06 hallucinations and evaluate your RAG systems quality
+3:09 see you there
